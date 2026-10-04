@@ -1,0 +1,21 @@
+[package]
+name = "gold-bot"
+version = "0.2.0"
+edition = "2021"
+
+[dependencies]
+# default-features = false تا native-tls/OpenSSL کشیده نشه (همه‌چیز با rustls)
+teloxide = { version = "0.13", default-features = false, features = ["macros", "ctrlc_handler", "rustls"] }
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "socks"] }
+# teloxide 0.13 از reqwest 0.11 استفاده می‌کند؛ این خط فقط برای فعال‌کردن پروکسی SOCKS و ساختن کلاینت تلگرام است
+reqwest011 = { package = "reqwest", version = "0.11", default-features = false, features = ["socks"] }
+scraper = "0.22"
+rusqlite = { version = "0.32", features = ["bundled"] }
+anyhow = "1"
+chrono = "0.4"
+chrono-tz = "0.10"
+futures = "0.3"
+dotenvy = "0.15"
+log = "0.4"
+pretty_env_logger = "0.5"
