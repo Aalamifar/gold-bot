@@ -1,15 +1,15 @@
 # Gold Price Monitor Bot
 
-A Telegram bot written in **Rust** that monitors gold-price pages, tracks short-term price movements, and sends alerts when a configured threshold is reached.
+A Telegram bot written in **Rust** that monitors configured gold-price pages, tracks short-term price movements, and sends alerts when a configured threshold is reached.
 
 The project uses asynchronous HTTP requests, HTML parsing, a sliding observation window, and SQLite to manage subscribers.
 
-> **Important:** Alerts describe price movements detected by the configured source. They are informational only, not investment advice or a recommendation to buy or sell.
+> **Important:** Alerts describe movements detected by the configured source. They are informational only, not investment advice or a recommendation to buy or sell.
 
 ## Features
 
-- Periodically fetches prices from configured websites.
-- Checks configured sources concurrently; one failed source does not stop the others.
+- Periodically fetches configured price sources.
+- Fetches configured sources concurrently; one failed source does not stop the others.
 - Extracts prices from HTML using a CSS selector or a text label.
 - Normalizes Persian, Arabic, and English digits and common price separators.
 - Detects upward and downward movements against the minimum or maximum price in a sliding time window.
@@ -45,7 +45,7 @@ The project uses asynchronous HTTP requests, HTML parsing, a sliding observation
 
 ## How It Works
 
-1. On each monitoring cycle, the bot fetches the configured price sources concurrently.
+1. On each monitoring cycle, the bot fetches configured price sources concurrently.
 2. It parses the current price and compares it with the minimum or maximum observed inside the sliding window.
 3. A movement must meet the configured percentage threshold.
 4. The same direction must be detected for the configured number of consecutive checks.
@@ -73,44 +73,28 @@ cd gold-bot
 
 ### 2. Configure environment variables
 
-The repository does not include a ready-made `.env.example` file. Create a `.env` file in the project root:
+Copy the example configuration and add your own Telegram bot token:
 
-```dotenv
-TELOXIDE_TOKEN=your_telegram_bot_token
-
-# Monitoring settings
-FLUCT_THRESHOLD=1.5
-WINDOW_MINUTES=5
-CHECK_INTERVAL_SEC=60
-ALERT_COOLDOWN_SEC=900
-CONFIRM_TICKS=2
-MAX_JUMP_PCT=15.0
-
-# Local SQLite database
-DB_PATH=users.db
-
-# Optional network settings
-TELEGRAM_PROXY=
-SITES_PROXY=
-TELEGRAM_API_URL=
-
-# Optional logging
-RUST_LOG=info
+```bash
+cp .env.example .env
 ```
 
-The following defaults are used when optional monitoring variables are omitted:
+Edit `.env` and replace `your_telegram_bot_token` with the token you received from @BotFather. Never commit your real `.env` file.
 
-| Variable | Default | Meaning |
-|---|---:|---|
-| `FLUCT_THRESHOLD` | `1.5` | Percentage movement required to trigger detection |
-| `WINDOW_MINUTES` | `5` | Sliding observation window |
-| `CHECK_INTERVAL_SEC` | `60` | Time between monitoring cycles (minimum: 5 seconds) |
-| `ALERT_COOLDOWN_SEC` | `900` | Cooldown for each source and direction |
-| `CONFIRM_TICKS` | `2` | Consecutive checks required to confirm a movement |
-| `MAX_JUMP_PCT` | `15.0` | Large one-step change threshold |
-| `DB_PATH` | `users.db` | SQLite database path |
-
-`TELOXIDE_TOKEN` is required. Keep it private and never commit your real `.env` file.
+| Variable | Default | Required | Meaning |
+|---|---:|:---:|---|
+| `TELOXIDE_TOKEN` | — | Yes | Telegram bot token |
+| `FLUCT_THRESHOLD` | `1.5` | No | Percentage movement required to trigger detection |
+| `WINDOW_MINUTES` | `5` | No | Sliding observation window |
+| `CHECK_INTERVAL_SEC` | `60` | No | Time between monitoring cycles (minimum: 5 seconds) |
+| `ALERT_COOLDOWN_SEC` | `900` | No | Cooldown for each source and direction |
+| `CONFIRM_TICKS` | `2` | No | Consecutive checks required to confirm a movement |
+| `MAX_JUMP_PCT` | `15.0` | No | Large one-step change threshold |
+| `DB_PATH` | `users.db` | No | SQLite database path |
+| `TELEGRAM_PROXY` | — | No | Optional proxy for Telegram traffic |
+| `SITES_PROXY` | — | No | Optional proxy for price-site requests |
+| `TELEGRAM_API_URL` | — | No | Optional alternative Telegram Bot API base URL |
+| `RUST_LOG` | `info` | No | Optional logging level |
 
 ### 3. Configure price sources
 
@@ -121,7 +105,7 @@ Edit `src/sources.rs` and configure each `Source` with:
 - An extraction strategy (`Extract::Css` or `Extract::After`)
 - A divisor to normalize the source value to toman (use `10.0` when the page reports rial)
 
-Only the source entries currently enabled in `sources()` are monitored. Additional sources can be added using the same structure.
+Only source entries currently enabled in `sources()` are monitored. Additional sources can be added using the same structure.
 
 Before adding a website, review its terms of service and `robots.txt`, and make sure your polling frequency is appropriate.
 
@@ -180,26 +164,44 @@ You can also use `Extract::After("price label")` when the price appears near a s
 
 The parser supports Persian, Arabic, and English digits, as well as common thousands and decimal separators. Prefer a precise selector or label to avoid accidentally extracting unrelated numbers.
 
-## Tests
+## Tests and Quality Checks
 
 Run the test suite with:
 
 ```bash
-cargo test
+cargo test --locked
+```
+
+Useful local quality checks:
+
+```bash
+cargo fmt --all -- --check
+cargo clippy --locked --all-targets
 ```
 
 The tests cover price parsing, HTML extraction, proxy configuration, subscriber storage, movement detection, confirmation checks, sliding-window behavior, cooldowns, and suspicious price changes.
 
+GitHub Actions runs formatting, tests, and Clippy on pushes and pull requests.
+
 ## Project Structure
 
 ```text
-src/
-├── bot.rs       # Telegram commands and message handling
-├── db.rs        # SQLite subscriber storage
-├── main.rs      # Configuration and application startup
-├── monitor.rs   # Price monitoring and alert detection
-├── sources.rs   # Price sources, HTTP fetching, and HTML parsing
-└── util.rs      # Formatting and timezone helpers
+.
+├── .env.example
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+├── src/
+│   ├── bot.rs       # Telegram commands and message handling
+│   ├── db.rs        # SQLite subscriber storage
+│   ├── main.rs      # Configuration and application startup
+│   ├── monitor.rs   # Price monitoring and alert detection
+│   ├── sources.rs   # Price sources, HTTP fetching, and HTML parsing
+│   └── util.rs      # Formatting and timezone helpers
+├── .gitignore
+├── Cargo.lock
+├── Cargo.toml
+└── README.md
 ```
 
 ## License
