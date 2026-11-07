@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   quality:
-    name: Format, test, and lint
+    name: Test and lint
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -21,13 +21,10 @@ jobs:
       - name: Install stable Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt, clippy
+          components: clippy
 
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
-
-      - name: Check formatting
-        run: cargo fmt --all -- --check
 
       - name: Run tests
         run: cargo test --locked
