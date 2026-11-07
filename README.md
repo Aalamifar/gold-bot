@@ -105,7 +105,7 @@ Edit `src/sources.rs` and configure each `Source` with:
 - An extraction strategy (`Extract::Css` or `Extract::After`)
 - A divisor to normalize the source value to toman (use `10.0` when the page reports rial)
 
-Only source entries currently enabled in `sources()` are monitored. Additional sources can be added using the same structure.
+At the moment, the only enabled source in `sources()` is **Exiraz** (`https://exiraz.com/18k-gold-price`). A Wallex source is present as a commented example/TODO and is not monitored. Additional sources can be enabled after their extraction rules have been verified.
 
 Before adding a website, review its terms of service and `robots.txt`, and make sure your polling frequency is appropriate.
 
@@ -181,7 +181,7 @@ cargo clippy --locked --all-targets
 
 The tests cover price parsing, HTML extraction, proxy configuration, subscriber storage, movement detection, confirmation checks, sliding-window behavior, cooldowns, and suspicious price changes.
 
-GitHub Actions runs formatting, tests, and Clippy on pushes and pull requests.
+GitHub Actions runs the test suite and Clippy on pushes and pull requests. Run `cargo fmt --all` locally to apply the repository's Rust formatting.
 
 ## Project Structure
 
